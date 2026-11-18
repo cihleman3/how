@@ -1,0 +1,8 @@
+.scala-build/
+.bsp/
+.metals/
+.bloop/
+.vscode/
+.idea/
+out/
+*.jar

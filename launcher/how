@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Startet how. Die Argumente kommen unverändert an.
+
+# how.jar liegt neben diesem Skript (Installation für alle Benutzer) oder in ~/.local/share/how (für einen Benutzer).
+self_dir="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+jar="$self_dir/how.jar"
+[[ -f "$jar" ]] || jar="$HOME/.local/share/how/how.jar"
+
+# Java aus JAVA_HOME, sonst aus dem PATH.
+java=java
+if [[ -n "${JAVA_HOME:-}" ]]; then
+  java_home="$JAVA_HOME"
+  command -v cygpath > /dev/null && java_home="$(cygpath -u "$java_home")"
+  [[ -x "$java_home/bin/java" ]] && java="$java_home/bin/java"
+fi
+if ! command -v "$java" > /dev/null; then
+  echo "how: Java not found. Install Java 17 or newer, or set JAVA_HOME." >&2
+  exit 1
+fi
+
+if command -v cygpath > /dev/null; then
+  # Git Bash. Beide Variablen gelten nur für java, how gibt sie nicht an die Befehle weiter, die es ausführt:
+  # MSYS_NO_PATHCONV: Wörter wie /etc in der Frage nicht in Windows-Pfade umschreiben.
+  # HOW_BASH: die bash, die how gestartet hat, damit how beim Ausführen nicht den WSL-Starter aus System32 erwischt.
+  HOW_BASH="$(cygpath -w "$BASH")" MSYS_NO_PATHCONV=1 \
+    exec "$java" -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -jar "$(cygpath -w "$jar")" "$@"
+fi
+exec "$java" -jar "$jar" "$@"
