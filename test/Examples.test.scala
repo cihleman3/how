@@ -19,7 +19,7 @@ class Examples extends FunSuite:
     val backend = SyncBackendStub.whenAnyRequest.thenRespondAdjust(reply(raw), StatusCode.Ok)
     for
       cli <- Cli.parse(args)
-      config <- Config.fromEnv(Map("OPENROUTER_API_KEY" -> "sk-or-test"), cli.model)
+      config <- Config.fromEnv(Map("OPENROUTER_API_KEY" -> "sk-or-test"), cli.model, Shell.Bash)
       question <- cli.question.toRight(HowError.Usage("no question"))
       raw <- OpenRouter.ask(backend, config, Prompt.system(Shell.Bash, "Linux"), question)
       answer <- Answer.from(raw)

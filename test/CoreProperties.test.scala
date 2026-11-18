@@ -16,19 +16,33 @@ class CoreProperties extends ScalaCheckSuite:
   // Config
 
   property("the API key is taken from the environment without blanks around it"):
-    forAllNoShrink(Gens.trimmed, Gens.blank, Gens.blank): (key, before, after) =>
-      assertEquals(Config.fromEnv(Map("OPENROUTER_API_KEY" -> s"$before$key$after"), None).map(_.apiKey), Right(key))
+    forAllNoShrink(Gens.trimmed, Gens.blank, Gens.blank, Gens.shell): (key, before, after, terminal) =>
+      val env = Map("OPENROUTER_API_KEY" -> s"$before$key$after")
+      assertEquals(Config.fromEnv(env, None, terminal).map(_.apiKey), Right(key))
 
-  property("a missing or blank API key is an error"):
-    forAllNoShrink(Gen.option(Gens.blank)): maybeBlank =>
+  property("a missing or blank API key is an error that knows the user's shell"):
+    forAllNoShrink(Gen.option(Gens.blank), Gens.shell): (maybeBlank, terminal) =>
       val env = maybeBlank.map(k => Map("OPENROUTER_API_KEY" -> k)).getOrElse(Map.empty)
-      assertEquals(Config.fromEnv(env, None), Left(HowError.MissingApiKey))
+      assertEquals(Config.fromEnv(env, None, terminal), Left(HowError.MissingApiKey(terminal)))
+
+  property("the missing-key message says how to set the key in the user's shell"):
+    forAllNoShrink(Gens.shell): terminal =>
+      val message = HowError.MissingApiKey(terminal).message
+      assert(message.contains("https://openrouter.ai/keys"), message)
+      terminal match
+        case Shell.Bash =>
+          assert(message.contains("export OPENROUTER_API_KEY=<key>"), message)
+          assert(!message.contains("SetEnvironmentVariable"), message)
+        case Shell.WindowsPowerShell | Shell.PowerShell7 =>
+          assert(message.contains("[Environment]::SetEnvironmentVariable('OPENROUTER_API_KEY', '<key>', 'User')"))
+          assert(message.contains("setx OPENROUTER_API_KEY <key>"), message)
+          assert(!message.contains("export"), message)
 
   property("--model wins over HOW_MODEL, which wins over the default"):
     forAllNoShrink(Gen.option(Gens.trimmed), Gen.option(Gen.oneOf(Gens.trimmed, Gens.blank))): (option, fromEnv) =>
       val env = Map("OPENROUTER_API_KEY" -> "k") ++ fromEnv.map("HOW_MODEL" -> _)
       val expected = option.orElse(fromEnv.filter(_.trim.nonEmpty)).getOrElse(Config.DefaultModel)
-      assertEquals(Config.fromEnv(env, option).map(_.model), Right(expected))
+      assertEquals(Config.fromEnv(env, option, Shell.Bash).map(_.model), Right(expected))
 
   // Answer
 

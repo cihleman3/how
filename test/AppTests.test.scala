@@ -67,8 +67,17 @@ class AppTests extends FunSuite:
   test("a missing key is reported before the question is read"):
     val io = FakeIo(inputs = List("list files"))
     assertEquals(App.run(Nil, Map.empty, linux, io), 1)
-    assert(io.errors.contains("OPENROUTER_API_KEY"))
+    assert(io.errors.contains("export OPENROUTER_API_KEY=<key>"), io.errors)
     assertEquals(io.prompts, Vector.empty)
+
+  test("the missing-key instructions follow the shell the user types in, not --shell"):
+    val powerShell = FakeIo()
+    assertEquals(App.run(List("--shell", "bash", "list", "files"), Map.empty, "Windows 11", powerShell), 1)
+    assert(powerShell.errors.contains("SetEnvironmentVariable"), powerShell.errors)
+    val gitBash = FakeIo()
+    val env = Map("SHELL" -> "/usr/bin/bash")
+    assertEquals(App.run(List("--shell", "powershell", "list", "files"), env, "Windows 11", gitBash), 1)
+    assert(gitBash.errors.contains("export OPENROUTER_API_KEY=<key>"), gitBash.errors)
 
   test("without words the question is read, and a BOM in front is dropped"):
     val io = FakeIo(inputs = List(0xfeff.toChar.toString + "what's in *.log?", "n"))

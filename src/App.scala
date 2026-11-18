@@ -21,9 +21,12 @@ object App:
         0
       case Right(cli) =>
         val shell = Shell.resolve(cli.shell, env, osName, Executables.find("pwsh", env, osName, io.exists).isDefined)
+        // The shell the user types in, for instructions to them; `--shell` only sets the target of the command.
+        // Both PowerShell versions set variables the same way, so PowerShell 7 need not be looked for.
+        val terminal = Shell.resolve(None, env, osName, pwshAvailable = false)
         val outcome =
           for
-            config <- Config.fromEnv(env, cli.model)
+            config <- Config.fromEnv(env, cli.model, terminal)
             question <- cli.question
               .orElse(io.readLine("Your question: ").map(Input.clean).flatMap(line => Cli.question(List(line))))
               .toRight(HowError.Usage("No question given."))
