@@ -1,6 +1,6 @@
 # how
 
-Fragen Sie die Kommandozeile in freien Worten und bekommen Sie einen kopierfertigen Befehl mit kurzer Erklärung:
+Ask the command line in plain words and get a command ready to copy and paste, with a short explanation:
 
 ```
 $ how can I find and delete all files with extension '.log' containing the string 'v0.1.0'
@@ -14,96 +14,96 @@ Warning: This permanently deletes the matching files. To preview first, run only
 Run it in bash? [y/N]
 ```
 
-- Der Befehl steht allein und ungefärbt am Anfang, zum Kopieren.
-- Die Erklärung kommt in der Sprache der Frage.
-- Bei zerstörerischen Befehlen folgt eine Warnung mit einem Vorschlag zur Vorschau.
-- Ist die Frage zu unklar, stellt `how` eine Rückfrage und endet (Exit-Code 2).
-- Ausgeführt wird nur nach `y` (oder `yes`, `j`, `ja`). Standard ist nein. Nach dem Ausführen gibt `how` den Exit-Code des Befehls zurück.
-- Antworten mit Steuerzeichen (z. B. `\r`, ESC) oder unsichtbaren Formatzeichen lehnt `how` ab. Sonst könnte das Terminal einen anderen Befehl anzeigen als den, der läuft.
+- The command comes first, on its own and without color, so it is easy to copy.
+- The explanation is in the language of the question.
+- Destructive commands come with a warning and a suggestion for previewing the effect.
+- If the question is too vague, `how` asks back and exits (exit code 2).
+- The command runs only after `y` (or `yes`, `j`, `ja`); the default is no. After running it, `how` returns the command's exit code.
+- `how` rejects answers that contain control characters (such as `\r` or ESC) or invisible formatting characters. Otherwise the terminal could show a different command from the one that runs.
 
 ## Installation
 
-Voraussetzungen: Java 21 und scala-cli.
+Requirements: Java 17 or newer, and [scala-cli](https://scala-cli.virtuslab.org/).
 
 ```sh
 bash install.sh                                          # Git Bash, macOS, Linux
 powershell -ExecutionPolicy Bypass -File .\install.ps1   # PowerShell
 ```
 
-Das baut `how.jar` nach `~/.local/share/how`. Die Startskripte landen in `~/.local/bin`: `how` für bash, `how.cmd` für PowerShell und cmd. Der Ordner muss im PATH sein.
+This builds `how.jar` into `~/.local/share/how` and puts the launchers into `~/.local/bin`: `how` for bash, `how.cmd` for PowerShell and cmd. That folder must be on your PATH.
 
-Dazu ein API-Schlüssel von OpenRouter in der Umgebung:
+You also need an [OpenRouter](https://openrouter.ai/keys) API key in your environment:
 
 ```sh
-export OPENROUTER_API_KEY=sk-or-...           # bash, z. B. in ~/.bashrc
+export OPENROUTER_API_KEY=sk-or-...           # bash, e.g. in ~/.bashrc
 ```
 
 ```powershell
-[Environment]::SetEnvironmentVariable('OPENROUTER_API_KEY', 'sk-or-...', 'User')   # PowerShell, dauerhaft
+[Environment]::SetEnvironmentVariable('OPENROUTER_API_KEY', 'sk-or-...', 'User')   # PowerShell, permanent
 ```
 
-### Für alle Benutzer (Windows)
+### For all users (Windows)
 
-Voraussetzung für jeden Benutzer: Java 17 oder neuer, über `JAVA_HOME` oder im PATH. Fehlt Java, meldet `how` das.
+Every user needs Java 17 or newer, via `JAVA_HOME` or on the PATH. Without Java, `how` says so.
 
-1. Als normaler Benutzer bauen: `scala-cli --power package . --assembly -o out\how.jar -f` (oder `install.ps1`).
-2. In einer PowerShell mit Administratorrechten im Projektordner:
+1. Build as a normal user: `scala-cli --power package . --assembly -o out\how.jar -f` (or run `install.ps1`).
+2. In the project folder, in a PowerShell with administrator rights:
 
    ```powershell
-   powershell -ExecutionPolicy Bypass -File .\install-all-users.ps1 -KeyFile <Datei mit dem Schlüssel>
+   powershell -ExecutionPolicy Bypass -File .\install-all-users.ps1 -KeyFile <file containing the key>
    ```
 
-Das kopiert `how.jar`, `how.cmd` und `how` nach `C:\Program Files\how` und nimmt den Ordner in den System-PATH auf. Mit `-KeyFile` wird `OPENROUTER_API_KEY` rechnerweit gesetzt. Alle Benutzer teilen dann den Schlüssel und sein Guthaben, und jeder kann ihn lesen. Ohne `-KeyFile` setzt jeder Benutzer seinen eigenen.
+This copies `how.jar`, `how.cmd` and `how` to `C:\Program Files\how` and adds that folder to the system PATH. With `-KeyFile`, `OPENROUTER_API_KEY` is set machine-wide: all users then share the key and its credit, and every user can read it. Without `-KeyFile`, each user sets their own.
 
-Eine Benutzervariable `OPENROUTER_API_KEY` hat Vorrang vor der rechnerweiten. Der System-PATH kommt vor dem des Benutzers, deshalb gewinnt die Installation für alle Benutzer vor einer eigenen in `~/.local/bin`.
+A user's own `OPENROUTER_API_KEY` takes precedence over the machine-wide one. The system PATH comes before the user's PATH, so the all-users installation wins over a personal one in `~/.local/bin`.
 
 ## Shells
 
-| `--shell` | Bedeutung |
+| `--shell` | Meaning |
 |---|---|
-| `bash` | bash. Unter Windows Git Bash; `how` startet die bash, aus der es aufgerufen wurde, sonst eine aus `SHELL` oder dem PATH, nie den WSL-Starter aus System32. |
-| `powershell` | PowerShell 7 (`pwsh`), wenn installiert, sonst unter Windows Windows PowerShell 5.1. |
+| `bash` | bash. On Windows this is Git Bash: `how` uses the bash it was started from, otherwise one from `SHELL` or the PATH, never the WSL launcher in System32. |
+| `powershell` | PowerShell 7 (`pwsh`) if installed, otherwise Windows PowerShell 5.1 on Windows. |
 | `pwsh` | PowerShell 7. |
-| `powershell5` | Windows PowerShell 5.1. Kennt kein `&&` und `\|\|`, `how` schlägt dort `; if ($?) { … }` vor. |
+| `powershell5` | Windows PowerShell 5.1. It has no `&&` and `\|\|`, so `how` suggests `; if ($?) { … }` instead. |
 
-Ohne `--shell` gilt bash, wenn `SHELL` gesetzt ist (Git Bash, macOS, Linux), sonst unter Windows `powershell`.
+Without `--shell`, `how` uses bash if `SHELL` is set (Git Bash, macOS, Linux), otherwise `powershell` on Windows.
 
-## Weitere Optionen und Umgebung
+## Other options and environment
 
 | | |
 |---|---|
-| `--model <id>` | Modell bei OpenRouter. Standard: `HOW_MODEL` oder `anthropic/claude-haiku-5.5`. |
-| `--` | Ende der Optionen, für Fragen, die mit `-` beginnen. |
-| `NO_COLOR` | Gesetzt: keine Farben. Der Befehl selbst ist ohnehin nie gefärbt. |
+| `--model <id>` | OpenRouter model. Default: `HOW_MODEL` or `anthropic/claude-haiku-5.5`. |
+| `--` | End of options, for questions that start with `-`. |
+| `NO_COLOR` | If set: no colors. The command itself is never colored anyway. |
 
-Optionen gelten nur vor der Frage. `how what does --force do in git push` funktioniert also.
+Options are only recognized before the question, so `how what does --force do in git push` works.
 
-## Sonderzeichen in der Frage
+## Special characters in the question
 
-Die Shell verarbeitet die Wörter, bevor `how` sie sieht:
+The shell processes the words before `how` sees them:
 
 - bash:
-  - Aus `'.log'` wird `.log`.
-  - Ein Apostroph wie in `what's` lässt bash auf das Ende des Zitats warten.
-  - `*` und `?` werden zu Dateinamen erweitert, wenn passende Dateien existieren.
-- PowerShell und cmd: `how.cmd` läuft über cmd, und cmd ersetzt `%VARIABLE%` durch ihren Wert, etwa `%PATH%`.
+  - `'.log'` becomes `.log`.
+  - An apostrophe, as in `what's`, makes bash wait for the closing quote.
+  - `*` and `?` expand to file names if matching files exist.
+- PowerShell and cmd: `how.cmd` runs through cmd, and cmd replaces `%VARIABLE%` with its value, e.g. `%PATH%`.
 
-Für solche Fragen `how` ohne Argumente aufrufen und die Frage eingeben. Dann kommt sie unverändert an, auch mit Umlauten.
+For such questions, run `how` without arguments and type the question. It then arrives unchanged, including non-ASCII characters.
 
-## Entwicklung
+## Development
 
 ```sh
-scala-cli test . --server=false
+scala-cli test .
 scala-cli setup-ide .
 scalafmt
 ```
 
-Aufbau und Konventionen stehen in `CLAUDE.md`. Die Tests rufen nie die echte API auf. Die Tests in `ExecutorRun` starten echte Prozesse und werden übersprungen, wenn keine bash gefunden wird.
+Structure and conventions are described in `CLAUDE.md` (in German). The tests never call the real API. The tests in `ExecutorRun` start real processes and are skipped if no bash is found.
 
-### Handtests der Startskripte
+### Manual tests of the launchers
 
-Die Startskripte sind nicht automatisch getestet. Nach Änderungen an `launcher/` von Hand prüfen:
+The launchers are not tested automatically. After changing anything in `launcher/`, check by hand:
 
-- Git Bash: `how list files in /etc` (der Pfad bleibt `/etc`), Ausführen mit `y`.
-- PowerShell: `$x = how wie zeige ich die Größe des Ordners Übungen an` (Umlaute richtig), Ausführen mit `y`.
-- PowerShell: `how` ohne Argumente mit einer Frage, die `%PATH%` enthält.
+- Git Bash: `how list files in /etc` (the path stays `/etc`), and run the command with `y`.
+- PowerShell: `$x = how wie zeige ich die Größe des Ordners Übungen an` (non-ASCII characters survive redirected output), and run the command with `y`.
+- PowerShell: `how` without arguments, with a question containing `%PATH%`.
