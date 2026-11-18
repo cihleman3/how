@@ -23,14 +23,25 @@ Run it in bash? [y/N]
 
 ## Installation
 
-Requirements: Java 17 or newer, and [scala-cli](https://scala-cli.virtuslab.org/).
+### From a release (needs only Java)
 
-```sh
-bash install.sh                                          # Git Bash, macOS, Linux
-powershell -ExecutionPolicy Bypass -File .\install.ps1   # PowerShell
-```
+Requirement: Java 17 or newer.
 
-This builds `how.jar` into `~/.local/share/how` and puts the launchers into `~/.local/bin`: `how` for bash, `how.cmd` for PowerShell and cmd. That folder must be on your PATH.
+1. Download `how-<version>.zip` from the [latest release](https://github.com/cihleman3/how/releases/latest) and unpack it.
+2. In the unpacked folder:
+
+   ```sh
+   bash install.sh                                          # Git Bash, macOS, Linux
+   powershell -ExecutionPolicy Bypass -File .\install.ps1   # PowerShell
+   ```
+
+### From source
+
+Requirements: Java 17 or newer, and [scala-cli](https://scala-cli.virtuslab.org/). In a clone of this repository, run the same install script as above. It builds `how.jar` first.
+
+### Where it goes
+
+The install scripts copy `how.jar` into `~/.local/share/how` and the launchers into `~/.local/bin`: `how` for bash, `how.cmd` for PowerShell and cmd. That folder must be on your PATH. On macOS you may need to add `export PATH="$HOME/.local/bin:$PATH"` to `~/.zshrc`.
 
 You also need an [OpenRouter](https://openrouter.ai/keys) API key in your environment:
 
@@ -46,8 +57,8 @@ export OPENROUTER_API_KEY=sk-or-...           # bash, e.g. in ~/.bashrc
 
 Every user needs Java 17 or newer, via `JAVA_HOME` or on the PATH. Without Java, `how` says so.
 
-1. Build as a normal user: `scala-cli --power package . --assembly -o out\how.jar -f` (or run `install.ps1`).
-2. In the project folder, in a PowerShell with administrator rights:
+1. A release download already contains `how.jar`. From a git clone, build it first as a normal user: `scala-cli --power package . --assembly -o out\how.jar -f`.
+2. In the unpacked release folder or the clone, in a PowerShell with administrator rights:
 
    ```powershell
    powershell -ExecutionPolicy Bypass -File .\install-all-users.ps1 -KeyFile <file containing the key>

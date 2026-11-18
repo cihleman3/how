@@ -1,7 +1,8 @@
 # Installs how for all users of this computer into C:\Program Files\how and adds the folder to the system PATH.
 # Must run in a PowerShell with administrator rights.
 #
-# Build it first as a normal user (scala-cli is usually installed for that user only):
+# Uses how.jar next to this script (release download). From a git clone, build it first as a normal user
+# (scala-cli is usually installed for that user only):
 #   scala-cli --power package . --assembly -o out\how.jar -f
 #
 # With -KeyFile, the OpenRouter key from the file is set machine-wide. All users then share it:
@@ -21,14 +22,17 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
     throw 'Please run this in a PowerShell with administrator rights ("Run as administrator").'
 }
 
-$jar = Join-Path $PSScriptRoot 'out\how.jar'
+$jar = Join-Path $PSScriptRoot 'how.jar'
+if (-not (Test-Path $jar)) { $jar = Join-Path $PSScriptRoot 'out\how.jar' }
 if (-not (Test-Path $jar)) {
-    throw "$jar is missing. Build it first as a normal user: scala-cli --power package . --assembly -o out\how.jar -f"
+    throw "how.jar is missing. Build it first as a normal user: scala-cli --power package . --assembly -o out\how.jar -f"
 }
+$launchers = Join-Path $PSScriptRoot 'launcher'
+if (-not (Test-Path $launchers -PathType Container)) { $launchers = $PSScriptRoot }
 
 # Program and launchers
 New-Item -ItemType Directory -Force $Target | Out-Null
-Copy-Item $jar, (Join-Path $PSScriptRoot 'launcher\how.cmd'), (Join-Path $PSScriptRoot 'launcher\how') $Target -Force
+Copy-Item $jar, (Join-Path $launchers 'how.cmd'), (Join-Path $launchers 'how') $Target -Force
 Write-Host "Installed: $Target"
 
 # System PATH. Written directly to the registry so that entries like %SystemRoot% stay unexpanded (REG_EXPAND_SZ).
