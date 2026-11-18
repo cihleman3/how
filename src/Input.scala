@@ -4,5 +4,5 @@ object Input:
 
   private val Bom = 0xfeff.toChar
 
-  /** Bereinigt eine eingelesene Zeile: PowerShell 5.1 setzt in einer Pipe ein BOM vor den Text. */
+  /** Cleans a line that was read: in a pipe, PowerShell 5.1 puts a BOM in front of the text. */
   def clean(line: String): String = line.stripPrefix(Bom.toString)

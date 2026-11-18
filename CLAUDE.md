@@ -1,36 +1,36 @@
 # how
 
-Kommandozeilenwerkzeug: `how <Frage in freien Worten>` liefert einen kopierfertigen Shell-Befehl und eine kurze Erklärung. Das Modell wird über OpenRouter angesprochen.
+Command-line tool: `how <question in plain words>` returns a shell command ready to copy and paste, with a short explanation. The model is called through OpenRouter.
 
-Die globalen Scala-Richtlinien gelten. Zusätzlich gilt für dieses Projekt:
+The author's global Scala guidelines apply. In addition, this project follows these rules:
 
-## Aufbau
+## Structure
 
-- Reiner Kern im Paket `how`: `Cli`, `Shell`, `Prompt`, `Answer`, `Render`, `Config`, `Input`, `Executables`, `App` und die reinen Teile von `OpenRouter` und `Executor`. Kein Ein- und Ausgabezugriff, keine Umgebungsvariablen, kein Netz, kein Dateisystem. Alles, was von außen kommt, wird als Parameter übergeben (z. B. `env: Map[String, String]`, `osName: String`, `exists: String => Boolean`).
-- `App.run` ist der Ablauf eines Aufrufs. Alle Effekte bekommt es über die Schnittstelle `Io`; `Main.RealIo` liefert die echten, `AppTests` eigene.
-- Effekte nur am Rand:
-  - `Main.RealIo` für Konsole und Eingabe,
-  - `OpenRouter.ask` für HTTP,
-  - `Executor.run` und `Executor.fileExists` für Prozesse und Dateisystem.
-  Jede Effektfunktion ist dünn und ruft reine Funktionen auf, die getestet sind. Was gestartet wird, plant `Executor.plan` als Wert.
-- Fehler als Wert: `enum HowError`. Exceptions von sttp, ujson und Prozessen werden am Rand mit `Try` gefangen und mit `HowError.describe` in einen `HowError` übersetzt. Sie dürfen nicht nach außen dringen; auch jeder Zugriff auf JSON und jedes `Path.of` läuft in einem `Try`.
-- Antworten des Modells sind nicht vertrauenswürdig: `Answer.from` lehnt Steuer- und Formatzeichen ab, damit angezeigt wird, was ausgeführt wird.
-- Formatierung mit scalafmt (`.scalafmt.conf`).
-- Keine Escape-Sequenzen wie `﻿` oder `\u001b` im Quelltext, die ein Werkzeug als echtes Zeichen schreiben könnte; Sonderzeichen als Zahl (`0xfeff.toChar`, `27.toChar`).
-- Die Ausgabe ist das Produkt: Der Befehl steht allein auf seiner Zeile, ohne Präfix, damit er sich kopieren lässt.
-- Texte der Oberfläche auf Englisch. Die Erklärung des Modells kommt in der Sprache der Frage.
+- Pure core in package `how`: `Cli`, `Shell`, `Prompt`, `Answer`, `Render`, `Config`, `Input`, `Executables`, `App` and the pure parts of `OpenRouter` and `Executor`. No input or output, no environment variables, no network, no file system. Everything from outside is passed in as a parameter (e.g. `env: Map[String, String]`, `osName: String`, `exists: String => Boolean`).
+- `App.run` is the flow of one call. It gets all effects through the `Io` interface; `Main.RealIo` provides the real ones, `AppTests` its own.
+- Effects only at the edge:
+  - `Main.RealIo` for the console and input,
+  - `OpenRouter.ask` for HTTP,
+  - `Executor.run` and `Executor.fileExists` for processes and the file system.
+  Each effectful function is thin and calls pure functions that are tested. What gets started is planned as a value by `Executor.plan`.
+- Errors as values: `enum HowError`. Exceptions from sttp, ujson and processes are caught at the edge with `Try` and turned into a `HowError` with `HowError.describe`. They must not escape; every JSON access and every `Path.of` runs inside a `Try` as well.
+- Answers from the model are not trusted: `Answer.from` rejects control and formatting characters, so that what is shown is what runs.
+- Formatting with scalafmt (`.scalafmt.conf`).
+- No Unicode escape sequences for special characters (such as U+FEFF or ESC) in the source: tools may write them as real, invisible characters. Write special characters as numbers instead (`0xfeff.toChar`, `27.toChar`).
+- The output is the product: the command stands alone on its line, without prefix, so it can be copied.
+- User interface texts in English. The model's explanation is in the language of the question.
 
-## Sicherheit
+## Security
 
-- Der API-Schlüssel kommt nur aus der Umgebungsvariable `OPENROUTER_API_KEY`. Nie in Code, Tests, Logs oder Fehlermeldungen.
-- Ein Befehl wird nur nach ausdrücklicher Bestätigung ausgeführt (Standard: nein).
+- The API key comes only from the environment variable `OPENROUTER_API_KEY`. Never in code, tests, logs or error messages.
+- A command runs only after explicit confirmation (default: no).
 
 ## Tests
 
-- MUnit mit ScalaCheck-Eigenschaften, dazu Beispieltests mit der Frage aus der Aufgabe.
-- Tests rufen nie die echte API auf: Anfragen werden als Wert geprüft, Antworten mit `SyncBackendStub` simuliert.
-- Testen mit `scala-cli test . --server=false`.
+- MUnit with ScalaCheck properties, plus example tests with the question from the original request.
+- Tests never call the real API: requests are checked as values, responses are simulated with `SyncBackendStub`.
+- Run the tests with `scala-cli test .` (add `--server=false` if the Bloop server cannot start).
 
-## Werkzeuge
+## Tools
 
-- Metals (MCP) verwenden, wenn verfügbar: für Navigation, Verweise und Diagnosen.
+- Use Metals (MCP) when available: for navigation, references and diagnostics.

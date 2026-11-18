@@ -2,7 +2,7 @@ package how
 
 import scala.annotation.tailrec
 
-/** Ergebnis der Kommandozeile. Ohne Frage (`None`) liest `App` sie interaktiv ein. */
+/** Result of the command line. Without a question (`None`), `App` reads it interactively. */
 final case class CliArgs(
     shell: Option[ShellChoice] = None,
     model: Option[String] = None,
@@ -27,7 +27,9 @@ object Cli:
       |
       |Needs the environment variable OPENROUTER_API_KEY.""".stripMargin
 
-  /** Optionen werden nur am Anfang erkannt. Ab dem ersten Wort der Frage gehört alles zur Frage, auch `--force`. */
+  /** Options are only recognized at the start. From the first word of the question on, everything belongs to the
+    * question, even `--force`.
+    */
   def parse(args: List[String]): Either[HowError, CliArgs] =
     @tailrec
     def loop(rest: List[String], acc: CliArgs): Either[HowError, CliArgs] =
@@ -50,6 +52,6 @@ object Cli:
 
   private def isOption(word: String): Boolean = word.startsWith("-") && word.length > 1
 
-  /** Verbindet die Wörter mit Leerzeichen; eine leere Frage gilt als keine Frage. */
+  /** Joins the words with spaces; an empty question counts as no question. */
   def question(words: List[String]): Option[String] =
     Some(words.mkString(" ").trim).filter(_.nonEmpty)

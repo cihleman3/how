@@ -12,7 +12,7 @@ class OpenRouterTests extends ScalaCheckSuite:
 
   private val config = Config("sk-or-test", "some/model")
 
-  /** Antwort von OpenRouter im Format der Chat Completions API. */
+  /** A reply from OpenRouter in the format of the Chat Completions API. */
   private def completion(content: String, finishReason: String = "stop"): String =
     ujson.write(
       ujson.Obj(
@@ -28,7 +28,7 @@ class OpenRouterTests extends ScalaCheckSuite:
   private def requestBody(request: sttp.client4.Request[String]): ujson.Value =
     ujson.read(request.body.show.stripPrefix("string: "))
 
-  // Anfrage
+  // Request
 
   property("the request carries key, model, prompt and question unchanged"):
     forAllNoShrink(Gens.nonBlank, Gens.nonBlank, Gens.text, Gens.text): (key, model, prompt, question) =>
@@ -51,7 +51,7 @@ class OpenRouterTests extends ScalaCheckSuite:
     assertEquals(fields, Set("kind", "command", "explanation", "warning", "question"))
     assertEquals(RawAnswer.schema("required").arr.map(_.str).toSet, fields)
 
-  // Antwort
+  // Response
 
   property("an answer comes back as it was sent, also inside code fences"):
     forAllNoShrink(Gens.rawAnswer, Gen.oneOf("", "```json\n", "```\n"), Gens.blank): (raw, fence, blank) =>
@@ -66,7 +66,7 @@ class OpenRouterTests extends ScalaCheckSuite:
       Left(HowError.InvalidResponse("the answer was cut off"))
     )
 
-  /** JSON-Werte jeder Art, um sie an Stellen einzusetzen, an denen ein Objekt erwartet wird. */
+  /** JSON values of every kind, to put where an object is expected. */
   private val anyJson: Gen[ujson.Value] = Gen.oneOf(
     Gen.const(ujson.Null),
     Gen.choose(-5, 5).map(n => ujson.Num(n)),
@@ -108,7 +108,7 @@ class OpenRouterTests extends ScalaCheckSuite:
       val body = ujson.write(ujson.Obj("error" -> ujson.Obj("message" -> message, "code" -> code)))
       assertEquals(OpenRouter.interpret(StatusCode(code), body), Left(HowError.Http(code, message)))
 
-  // Senden mit Stub
+  // Sending with a stub
 
   test("ask sends the request and reads the answer"):
     val raw = RawAnswer("command", "ls -la", "lists all files", "", "")

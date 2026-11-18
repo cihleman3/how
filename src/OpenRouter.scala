@@ -9,7 +9,7 @@ object OpenRouter:
 
   val endpoint = uri"https://openrouter.ai/api/v1/chat/completions"
 
-  /** Anfrage als Wert, damit sie sich ohne Netz prüfen lässt. */
+  /** The request as a value, so it can be checked without a network. */
   def request(config: Config, systemPrompt: String, question: String): Request[String] =
     basicRequest
       .post(endpoint)
@@ -36,7 +36,7 @@ object OpenRouter:
       )
     )
 
-  /** Einziger Effekt: die Anfrage senden. Netzwerkfehler werden zu [[HowError.Unreachable]]. */
+  /** The only effect: sending the request. Network errors become [[HowError.Unreachable]]. */
   def ask(backend: SyncBackend, config: Config, systemPrompt: String, question: String): Either[HowError, RawAnswer] =
     Try(request(config, systemPrompt, question).send(backend)).toEither.left
       .map(e => HowError.Unreachable(HowError.describe(e)))
@@ -50,8 +50,8 @@ object OpenRouter:
       case 429  => Left(HowError.RateLimited)
       case code => Left(HowError.Http(code, errorDetail(body)))
 
-  /** Liest `choices[0].message.content` und darin das JSON der Antwort. Jeder Zugriff auf das JSON läuft in einem
-    * `Try`: Eine unerwartete Antwort ist ein [[HowError.InvalidResponse]], nie eine Exception.
+  /** Reads `choices[0].message.content` and the answer's JSON inside it. Every access to the JSON runs in a `Try`: an
+    * unexpected reply is a [[HowError.InvalidResponse]], never an exception.
     */
   def parseCompletion(body: String): Either[HowError, RawAnswer] =
     def invalid(reason: String) = (_: Throwable) => HowError.InvalidResponse(reason)
@@ -69,14 +69,14 @@ object OpenRouter:
         .map(invalid(s"unexpected format: ${abbreviate(content)}"))
     yield raw
 
-  /** OpenRouter meldet manche Fehler des Anbieters mit Status 200 und einem `error`-Objekt. */
+  /** OpenRouter reports some provider errors with status 200 and an `error` object. */
   private def providerError(json: ujson.Value): Option[HowError] =
     json.objOpt
       .flatMap(_.get("error"))
       .map: error =>
         HowError.Upstream(Try(error("message").str).getOrElse(abbreviate(ujson.write(error))))
 
-  /** Manche Modelle setzen trotz JSON Schema Code-Zäune um die Antwort. */
+  /** Some models put code fences around the answer despite the JSON Schema. */
   def unfence(content: String): String =
     val trimmed = content.trim
     if trimmed.startsWith("```") then trimmed.stripPrefix("```json").stripPrefix("```").stripSuffix("```").trim

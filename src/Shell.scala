@@ -1,18 +1,18 @@
 package how
 
-/** Die Shell, für die `how` Befehle erzeugt und in der es sie ausführt. */
+/** The shell that `how` writes commands for and runs them in. */
 enum Shell(val label: String):
   case Bash extends Shell("bash")
   case WindowsPowerShell extends Shell("Windows PowerShell 5.1")
   case PowerShell7 extends Shell("PowerShell 7")
 
-/** Was mit `--shell` verlangt wurde. `AnyPowerShell` heißt: PowerShell 7, wenn vorhanden. */
+/** What `--shell` asked for. `AnyPowerShell` means: PowerShell 7 if available. */
 enum ShellChoice:
   case Bash, AnyPowerShell, PowerShell7, WindowsPowerShell
 
 object Shell:
 
-  /** Liest den Wert von `--shell`; Groß-/Kleinschreibung und Leerraum am Rand spielen keine Rolle. */
+  /** Reads the value of `--shell`; case and surrounding whitespace do not matter. */
   def parse(value: String): Option[ShellChoice] =
     value.trim.toLowerCase match
       case "bash"                 => Some(ShellChoice.Bash)
@@ -21,11 +21,11 @@ object Shell:
       case "powershell5"          => Some(ShellChoice.WindowsPowerShell)
       case _                      => None
 
-  /** Bestimmt die Shell. Ohne `--shell`: bash, wenn `SHELL` gesetzt ist (Git Bash, macOS, Linux), sonst unter Windows
-    * PowerShell. PowerShell heißt PowerShell 7, wenn vorhanden; Windows PowerShell 5.1 gibt es nur unter Windows.
+  /** Determines the shell. Without `--shell`: bash if `SHELL` is set (Git Bash, macOS, Linux), otherwise PowerShell on
+    * Windows. PowerShell means PowerShell 7 if available; Windows PowerShell 5.1 exists only on Windows.
     *
     * @param pwshAvailable
-    *   wird nur ausgewertet, wenn es auf die Antwort ankommt (Suche im Dateisystem)
+    *   evaluated only when it matters for the result (it searches the file system)
     */
   def resolve(choice: Option[ShellChoice], env: Map[String, String], osName: String, pwshAvailable: => Boolean): Shell =
     def anyPowerShell: Shell =

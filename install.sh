@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Baut how und installiert es nach ~/.local/share/how (Programm) und ~/.local/bin (Befehl).
+# Builds how and installs it into ~/.local/share/how (program) and ~/.local/bin (command).
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
@@ -11,4 +11,4 @@ chmod +x "$HOME/.local/bin/how"
 case "$(uname -s)" in
   MINGW* | MSYS* | CYGWIN*) cp launcher/how.cmd "$HOME/.local/bin/how.cmd" ;;
 esac
-echo "Installiert: $HOME/.local/bin/how"
+echo "Installed: $HOME/.local/bin/how"

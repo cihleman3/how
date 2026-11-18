@@ -5,7 +5,7 @@ import scala.concurrent.duration.*
 import scala.util.{Try, Using}
 import sttp.client4.{BackendOptions, DefaultSyncBackend}
 
-/** Rand des Programms: die echten Effekte für [[App]]. */
+/** Edge of the program: the real effects for [[App]]. */
 object Main:
 
   def main(args: Array[String]): Unit =
@@ -15,13 +15,14 @@ object Main:
 
     private val console = Option(System.console())
 
-    /** Eingaben über die Konsole lesen, wenn es eine gibt: Sie kennt ihren Zeichensatz (unter Windows meist cp850),
-      * `System.in` würde als UTF-8 gelesen und Umlaute zerstören. Ohne Konsole (Pipe, mintty) bleibt `System.in`.
+    /** Reads input through the console if there is one: it knows its character set (on Windows usually cp850), whereas
+      * `System.in` would be read as UTF-8 and break non-ASCII characters. Without a console (pipe, mintty), `System.in`
+      * is used.
       */
     private val input: BufferedReader =
       console.map(c => BufferedReader(c.reader())).getOrElse(BufferedReader(InputStreamReader(System.in)))
 
-    /** Git Bash (mintty) ist für Java keine Konsole, setzt aber `TERM`. */
+    /** Git Bash (mintty) is no console for Java, but it sets `TERM`. */
     val interactive: Boolean = console.isDefined || env.get("TERM").exists(_.nonEmpty)
 
     def readLine(prompt: String): Option[String] =

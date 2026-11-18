@@ -1,6 +1,6 @@
 package how
 
-/** Alles, was bei einem Aufruf von `how` schiefgehen kann. */
+/** Everything that can go wrong in a call of `how`. */
 enum HowError:
   case Usage(problem: String)
   case MissingApiKey
@@ -25,15 +25,15 @@ enum HowError:
     case InvalidResponse(reason) => s"The model's answer could not be understood: $reason"
     case Execution(reason)       => s"Could not run the command: $reason"
 
-  /** 2 für Bedienfehler, 1 für alles andere. */
+  /** 2 for usage errors, 1 for everything else. */
   def exitCode: Int = this match
     case Usage(_) => 2
     case _        => 1
 
 object HowError:
 
-  /** Einheitliche Beschreibung einer gefangenen Exception für die Fehlermeldung. Bibliotheken wie sttp verpacken die
-    * eigentliche Ursache („connection refused“) in eine allgemeine Exception; deshalb zählt die innerste Meldung.
+  /** Uniform description of a caught exception for the error message. Libraries like sttp wrap the actual cause
+    * ("connection refused") in a generic exception, so the innermost message counts.
     */
   def describe(e: Throwable): String =
     val chain = LazyList.iterate(Option(e))(_.flatMap(t => Option(t.getCause))).take(10).takeWhile(_.isDefined).flatten

@@ -3,7 +3,7 @@ package how
 import java.util.concurrent.atomic.AtomicReference
 import munit.FunSuite
 
-/** Die Verdrahtung in [[App.run]]: Exit-Codes, Reihenfolge und dass nur nach Zustimmung etwas läuft. */
+/** The wiring in [[App.run]]: exit codes, order, and that something runs only after consent. */
 class AppTests extends FunSuite:
 
   enum Event:
@@ -13,7 +13,7 @@ class AppTests extends FunSuite:
     case Asked(model: String, question: String)
     case Executed(plan: Executor.Plan)
 
-  /** Test-Io: liefert vorgegebene Eingaben und Antworten und zeichnet alles auf. */
+  /** Test Io: returns given inputs and answers and records everything. */
   final class FakeIo(
       inputs: List[String] = Nil,
       reply: Either[HowError, RawAnswer] = Right(command("ls")),

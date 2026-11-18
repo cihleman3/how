@@ -2,7 +2,7 @@ package how
 
 import munit.FunSuite
 
-/** Startet echte Prozesse. Läuft nur, wenn eine bash gefunden wird. */
+/** Starts real processes. Runs only if a bash is found. */
 class ExecutorRun extends FunSuite:
 
   private val osName = System.getProperty("os.name", "unknown")

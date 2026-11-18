@@ -5,12 +5,12 @@ import munit.ScalaCheckSuite
 import org.scalacheck.Gen
 import org.scalacheck.Prop.*
 
-/** Eigenschaften von Config, Answer, Render, Input, Prompt und den reinen Teilen von Executor. */
+/** Properties of Config, Answer, Render, Input, Prompt and the pure parts of Executor. */
 class CoreProperties extends ScalaCheckSuite:
 
   private val Bom = 0xfeff.toChar
 
-  /** ANSI-Farbcode, zum Entfernen aus der Ausgabe. */
+  /** ANSI color code, to remove it from the output. */
   private val Ansi = 27.toChar.toString + "\\[[0-9;]*m"
 
   // Config

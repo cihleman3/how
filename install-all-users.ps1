@@ -1,13 +1,13 @@
-# Installiert how fuer alle Benutzer dieses Rechners nach C:\Program Files\how und nimmt den Ordner in den
-# System-PATH auf. Muss in einer PowerShell mit Administratorrechten laufen.
+# Installs how for all users of this computer into C:\Program Files\how and adds the folder to the system PATH.
+# Must run in a PowerShell with administrator rights.
 #
-# Vorher als normaler Benutzer bauen (scala-cli ist meist nur fuer diesen Benutzer installiert):
+# Build it first as a normal user (scala-cli is usually installed for that user only):
 #   scala-cli --power package . --assembly -o out\how.jar -f
 #
-# Mit -KeyFile wird der OpenRouter-Schluessel aus der Datei rechnerweit gesetzt. Dann teilen ihn alle Benutzer:
-# Alle verbrauchen dasselbe Guthaben, und jeder Benutzer kann den Schluessel lesen.
+# With -KeyFile, the OpenRouter key from the file is set machine-wide. All users then share it:
+# everyone spends the same credit, and every user can read the key.
 #
-# Voraussetzung fuer jeden Benutzer: Java 17 oder neuer, ueber JAVA_HOME oder im PATH.
+# Every user needs Java 17 or newer, via JAVA_HOME or on the PATH.
 
 param(
     [string]$KeyFile,
@@ -18,40 +18,40 @@ $ErrorActionPreference = 'Stop'
 
 $principal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
 if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    throw 'Bitte in einer PowerShell mit Administratorrechten ausfuehren ("Als Administrator ausfuehren").'
+    throw 'Please run this in a PowerShell with administrator rights ("Run as administrator").'
 }
 
 $jar = Join-Path $PSScriptRoot 'out\how.jar'
 if (-not (Test-Path $jar)) {
-    throw "$jar fehlt. Erst als normaler Benutzer bauen: scala-cli --power package . --assembly -o out\how.jar -f"
+    throw "$jar is missing. Build it first as a normal user: scala-cli --power package . --assembly -o out\how.jar -f"
 }
 
-# Programm und Startskripte
+# Program and launchers
 New-Item -ItemType Directory -Force $Target | Out-Null
 Copy-Item $jar, (Join-Path $PSScriptRoot 'launcher\how.cmd'), (Join-Path $PSScriptRoot 'launcher\how') $Target -Force
-Write-Host "Installiert: $Target"
+Write-Host "Installed: $Target"
 
-# System-PATH. Direkt in der Registry, damit Eintraege wie %SystemRoot% unaufgeloest (REG_EXPAND_SZ) bleiben.
+# System PATH. Written directly to the registry so that entries like %SystemRoot% stay unexpanded (REG_EXPAND_SZ).
 $environment = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey(
     'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', $true)
 $path = $environment.GetValue('Path', '', [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
 if (($path -split ';') -notcontains $Target) {
     $environment.SetValue('Path', ($path.TrimEnd(';') + ';' + $Target), [Microsoft.Win32.RegistryValueKind]::ExpandString)
-    Write-Host "In den System-PATH aufgenommen: $Target"
+    Write-Host "Added to the system PATH: $Target"
 } else {
-    Write-Host "Schon im System-PATH: $Target"
+    Write-Host "Already on the system PATH: $Target"
 }
 $environment.Close()
 
-# Schluessel fuer alle Benutzer
+# Key for all users
 if ($KeyFile) {
     $key = (Get-Content $KeyFile -Raw).Trim()
-    if (-not $key.StartsWith('sk-or-')) { throw "$KeyFile enthaelt keinen OpenRouter-Schluessel (sk-or-...)." }
+    if (-not $key.StartsWith('sk-or-')) { throw "$KeyFile does not contain an OpenRouter key (sk-or-...)." }
     [Environment]::SetEnvironmentVariable('OPENROUTER_API_KEY', $key, 'Machine')
-    Write-Host 'OPENROUTER_API_KEY fuer alle Benutzer gesetzt.'
+    Write-Host 'OPENROUTER_API_KEY set for all users.'
 }
 
-# Laufenden Programmen (Explorer, Startmenue) die geaenderte Umgebung melden, damit neue Fenster sie sehen.
+# Tell running programs (Explorer, Start menu) about the changed environment, so that new windows see it.
 Add-Type -Namespace HowInstall -Name Native -MemberDefinition @'
 [DllImport("user32.dll", CharSet = CharSet.Unicode)]
 public static extern System.IntPtr SendMessageTimeout(System.IntPtr hWnd, uint msg, System.UIntPtr wParam,
@@ -60,4 +60,4 @@ public static extern System.IntPtr SendMessageTimeout(System.IntPtr hWnd, uint m
 $result = [UIntPtr]::Zero
 [HowInstall.Native]::SendMessageTimeout([IntPtr]0xffff, 0x1A, [UIntPtr]::Zero, 'Environment', 2, 5000, [ref]$result) | Out-Null
 
-Write-Host 'Fertig. Neue Terminalfenster finden how; bereits offene nicht.'
+Write-Host 'Done. New terminal windows will find how; windows that are already open will not.'

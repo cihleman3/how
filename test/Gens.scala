@@ -4,42 +4,42 @@ import org.scalacheck.Gen
 
 object Gens:
 
-  /** Beliebiger druckbarer ASCII-Text: auch leer, Leerzeichen, Anführungszeichen, `*`, `?`, `&`. */
+  /** Any printable ASCII text: also empty, spaces, quotes, `*`, `?`, `&`. */
   val text: Gen[String] = Gen.asciiPrintableStr
 
-  /** Garantiert nicht leer und nicht nur Leerraum. */
+  /** Guaranteed not empty and not only whitespace. */
   val nonBlank: Gen[String] = Gen.nonEmptyStringOf(Gen.asciiPrintableChar).suchThat(_.trim.nonEmpty)
 
-  /** Ohne Leerraum am Rand, wie nach `trim`. */
+  /** Without surrounding whitespace, as after `trim`. */
   val trimmed: Gen[String] = nonBlank.map(_.trim)
 
-  /** Leer oder nur Leerraum. */
+  /** Empty or only whitespace. */
   val blank: Gen[String] = Gen.listOf(Gen.oneOf(' ', '\t')).map(_.mkString)
 
-  /** Ein- oder mehrzeilig, jede Zeile ohne Leerraum am Rand. */
+  /** One or more lines, each without surrounding whitespace. */
   val lines: Gen[String] = Gen.nonEmptyListOf(trimmed).map(_.mkString("\n"))
 
-  /** Steuerzeichen außer Zeilenumbruch und Tabulator: C0, DEL und C1. */
+  /** Control characters except newline and tab: C0, DEL and C1. */
   val controlChar: Gen[Char] = Gen.oneOf(
     Gen.choose(0, 31).suchThat(c => c != '\n'.toInt && c != '\t'.toInt).map(_.toChar),
     Gen.const(127.toChar),
     Gen.choose(128, 159).map(_.toChar)
   )
 
-  /** Unsichtbare Formatzeichen, mit denen sich Text anders anzeigen lässt, als er ist (Bidi, Nullbreite, BOM). */
+  /** Invisible formatting characters that make text display differently from what it is (bidi, zero width, BOM). */
   val formatChar: Gen[Char] = Gen.oneOf(0x200b, 0x200e, 0x200f, 0x202a, 0x202e, 0x2066, 0x2069, 0xfeff).map(_.toChar)
 
-  /** Fügt das Zeichen an beliebiger Stelle ein. */
+  /** Inserts the character at any position. */
   def withInserted(base: String, c: Char): Gen[String] =
     Gen.choose(0, base.length).map(i => base.take(i) + c + base.drop(i))
 
-  /** Wörter einer Frage, wie die Shell sie übergibt. */
+  /** Words of a question, as the shell passes them. */
   val words: Gen[List[String]] = Gen.listOf(text)
 
-  /** Ein Wort, das nicht als Option gilt: beginnt nicht mit `-` oder ist genau `-`. */
+  /** A word that does not count as an option: does not start with `-`, or is exactly `-`. */
   val questionStart: Gen[String] = Gen.oneOf(Gen.const("-"), text.suchThat(w => !w.startsWith("-")))
 
-  /** Fast gleiche Varianten: andere Groß-/Kleinschreibung und Leerraum am Rand. */
+  /** Nearly equal variants: different case and surrounding whitespace. */
   def nearlyEqual(value: String): Gen[String] =
     for
       cased <- Gen.oneOf(value, value.toUpperCase, value.capitalize, value.toLowerCase)
@@ -47,7 +47,7 @@ object Gens:
       after <- Gen.oneOf("", " ", "\t ")
     yield before + cased + after
 
-  /** Gleiche Buchstaben, Groß-/Kleinschreibung beliebig gemischt. */
+  /** Same letters, with upper and lower case mixed at random. */
   def anyCase(value: String): Gen[String] =
     Gen
       .listOfN(value.length, Gen.oneOf(true, false))
@@ -67,12 +67,12 @@ object Gens:
 
   val anyOsName: Gen[String] = Gen.oneOf(windowsName, otherOsName)
 
-  /** Umgebung ohne `SHELL`; die Schlüssel stammen aus einem kleinen Pool, damit Kollisionen vorkommen. */
+  /** Environment without `SHELL`; the keys come from a small pool, so collisions happen. */
   val envWithoutShell: Gen[Map[String, String]] =
     val keys = Gen.oneOf("PATH", "TERM", "HOME", "shell", "Shell", "SHELL ", "COMSPEC")
     Gen.mapOf(Gen.zip(keys, text))
 
-  /** Verzeichnisse mit dem WSL-Starter `bash.exe`, in allen Schreibweisen, die im PATH vorkommen. */
+  /** Directories with the WSL launcher `bash.exe`, in all spellings that occur in PATH. */
   val wslDir: Gen[String] = Gen.oneOf(
     "C:\\Windows\\System32",
     "c:/windows/system32",
@@ -83,7 +83,7 @@ object Gens:
     "C:\\Windows\\Sysnative"
   )
 
-  /** Verzeichnisse einer Git-Installation. */
+  /** Directories of a Git installation. */
   val gitDir: Gen[String] = Gen.oneOf(
     "C:\\Program Files\\Git\\bin",
     "C:/Program Files/Git/usr/bin/",
@@ -91,7 +91,7 @@ object Gens:
     "D:\\tools\\git\\bin\\"
   )
 
-  /** Ein PATH-Eintrag: WSL, Git, Sonderfälle (leer, Anführungszeichen, Laufwerkswurzel) oder beliebiger Text. */
+  /** A PATH entry: WSL, Git, special cases (empty, quotes, drive root) or any text. */
   val pathEntry: Gen[String] = Gen.oneOf(
     wslDir,
     gitDir,

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Startet how. Die Argumente kommen unverändert an.
+# Starts how. The arguments arrive unchanged.
 
-# how.jar liegt neben diesem Skript (Installation für alle Benutzer) oder in ~/.local/share/how (für einen Benutzer).
+# how.jar is next to this script (installation for all users) or in ~/.local/share/how (for one user).
 self_dir="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 jar="$self_dir/how.jar"
 [[ -f "$jar" ]] || jar="$HOME/.local/share/how/how.jar"
 
-# Java aus JAVA_HOME, sonst aus dem PATH.
+# Java from JAVA_HOME, otherwise from the PATH.
 java=java
 if [[ -n "${JAVA_HOME:-}" ]]; then
   java_home="$JAVA_HOME"
@@ -19,9 +19,9 @@ if ! command -v "$java" > /dev/null; then
 fi
 
 if command -v cygpath > /dev/null; then
-  # Git Bash. Beide Variablen gelten nur für java, how gibt sie nicht an die Befehle weiter, die es ausführt:
-  # MSYS_NO_PATHCONV: Wörter wie /etc in der Frage nicht in Windows-Pfade umschreiben.
-  # HOW_BASH: die bash, die how gestartet hat, damit how beim Ausführen nicht den WSL-Starter aus System32 erwischt.
+  # Git Bash. Both variables apply to java only; how does not pass them on to the commands it runs:
+  # MSYS_NO_PATHCONV: do not rewrite words like /etc in the question into Windows paths.
+  # HOW_BASH: the bash that started how, so that how does not pick the WSL launcher in System32 when running a command.
   HOW_BASH="$(cygpath -w "$BASH")" MSYS_NO_PATHCONV=1 \
     exec "$java" -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -jar "$(cygpath -w "$jar")" "$@"
 fi

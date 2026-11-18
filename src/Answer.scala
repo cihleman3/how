@@ -2,14 +2,13 @@ package how
 
 import upickle.default.ReadWriter
 
-/** Antwort des Modells, wie sie über die Leitung kommt. Alle Felder sind Pflicht (strict JSON Schema), „keins“ ist "".
-  */
+/** The model's answer as it comes over the wire. All fields are required (strict JSON Schema); "none" is "". */
 final case class RawAnswer(kind: String, command: String, explanation: String, warning: String, question: String)
     derives ReadWriter
 
 object RawAnswer:
 
-  /** JSON Schema für `response_format`; muss zu den Feldern von [[RawAnswer]] passen. */
+  /** JSON Schema for `response_format`; must match the fields of [[RawAnswer]]. */
   val schema: ujson.Value =
     val text = ujson.Obj("type" -> "string")
     ujson.Obj(
@@ -25,7 +24,7 @@ object RawAnswer:
       "additionalProperties" -> false
     )
 
-/** Geprüfte Antwort: ohne Steuerzeichen, Zeilenenden als `\n`. */
+/** Checked answer: no control characters, line endings as `\n`. */
 enum Answer:
   case Command(command: String, explanation: String, warning: Option[String])
   case Clarification(question: String)
@@ -55,14 +54,16 @@ object Answer:
   private val controlCharacters =
     HowError.InvalidResponse("the answer contains control characters; not shown for safety")
 
-  /** Geprüft wird vor `trim`: Auch ein Steuerzeichen am Rand macht die Antwort verdächtig. */
+  /** Checked before `trim`: a control character at the edge also makes the answer suspicious. */
   private def unifyLineEnds(text: String): String = text.replace("\r\n", "\n")
 
-  /** Steuerzeichen außer Zeilenumbruch und Tabulator. Ein `\r` oder eine ESC-Sequenz kann im Terminal Text
-    * überschreiben, sodass ein anderer Befehl angezeigt wird als der, der nach „y“ läuft.
+  /** Control characters except newline and tab. A `\r` or an ESC sequence can overwrite text in the terminal, so that a
+    * different command is shown than the one that runs after "y".
     */
   private def isControl(c: Char): Boolean =
     Character.getType(c) == Character.CONTROL && c != '\n' && c != '\t'
 
-  /** Unsichtbare Formatzeichen (Bidi-Steuerung, Nullbreite, BOM), mit denen ein Befehl anders aussieht, als er ist. */
+  /** Invisible formatting characters (bidi controls, zero width, BOM) that make a command look different from what it
+    * is.
+    */
   private def isFormatting(c: Char): Boolean = Character.getType(c) == Character.FORMAT

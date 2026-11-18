@@ -4,7 +4,7 @@ import munit.FunSuite
 import sttp.client4.testing.SyncBackendStub
 import sttp.model.StatusCode
 
-/** Die Fälle aus der Aufgabe, mit festen Antworten statt der echten API. */
+/** The cases from the original request, with fixed answers instead of the real API. */
 class Examples extends FunSuite:
 
   private val args =

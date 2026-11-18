@@ -6,8 +6,8 @@ object Render:
   private val Reset = s"$Escape[0m"
   private val Yellow = s"$Escape[33m"
 
-  /** Der Befehl steht allein auf seiner Zeile (bzw. seinen Zeilen), ohne Präfix und immer ohne Farbe: So bleibt er auch
-    * dann sauber kopierbar, wenn die Farberkennung irrt (Git Bash setzt `TERM` auch bei umgeleiteter Ausgabe).
+  /** The command stands alone on its line (or lines), without prefix and never colored: that way it stays cleanly
+    * copyable even when color detection is wrong (Git Bash sets `TERM` even for redirected output).
     */
   def answer(answer: Answer, color: Boolean): String =
     def paint(text: String): String =
@@ -20,6 +20,6 @@ object Render:
       case Answer.Clarification(question) =>
         s"${paint("Your question is not clear enough yet:")}\n$question\n\nPlease ask again with more detail."
 
-  /** Farben nur im Terminal und nur, wenn `NO_COLOR` nicht gesetzt ist (https://no-color.org). */
+  /** Colors only in a terminal and only if `NO_COLOR` is not set (https://no-color.org). */
   def useColor(env: Map[String, String], interactive: Boolean): Boolean =
     interactive && !env.get("NO_COLOR").exists(_.nonEmpty) && !env.get("TERM").contains("dumb")

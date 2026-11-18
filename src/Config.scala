@@ -6,7 +6,7 @@ object Config:
 
   val DefaultModel = "anthropic/claude-haiku-5.5"
 
-  /** Modell: `--model` vor `HOW_MODEL` vor der Vorgabe. */
+  /** Model: `--model` before `HOW_MODEL` before the default. */
   def fromEnv(env: Map[String, String], modelOption: Option[String]): Either[HowError, Config] =
     val model = modelOption
       .orElse(env.get("HOW_MODEL").map(_.trim).filter(_.nonEmpty))

@@ -1,6 +1,6 @@
 package how
 
-/** Alle Effekte, die `how` braucht. `Main` liefert die echten, die Tests eigene. */
+/** All effects `how` needs. `Main` provides the real ones, the tests their own. */
 trait Io:
   def interactive: Boolean
   def readLine(prompt: String): Option[String]
@@ -10,7 +10,7 @@ trait Io:
   def exists(path: String): Boolean
   def execute(plan: Executor.Plan): Either[HowError, Int]
 
-/** Der Ablauf eines Aufrufs. Liefert den Exit-Code: 0 Erfolg, 1 Fehler, 2 Rückfrage oder Bedienfehler. */
+/** The flow of one call. Returns the exit code: 0 success, 1 error, 2 clarification or usage error. */
 object App:
 
   def run(args: List[String], env: Map[String, String], osName: String, io: Io): Int =
@@ -38,7 +38,7 @@ object App:
               case Answer.Clarification(_)       => 2
               case Answer.Command(command, _, _) => offerToRun(io, shell, command, env, osName)
 
-  /** Die Warnung steht direkt darüber in der Antwort und wird nicht wiederholt. */
+  /** The warning is right above in the answer and is not repeated. */
   private def offerToRun(io: Io, shell: Shell, command: String, env: Map[String, String], osName: String): Int =
     val confirmed = io.readLine(s"Run it in ${shell.label}? [y/N] ").map(Input.clean).exists(Executor.isYes)
     if !confirmed then 0

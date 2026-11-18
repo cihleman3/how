@@ -7,22 +7,21 @@ import scala.util.{Try, Using}
 
 object Executor:
 
-  /** Was gestartet wird, als Wert: das Programm mit Argumenten und gegebenenfalls ein Skript, das als letztes Argument
-    * (Pfad einer temporären Datei) angehängt wird.
+  /** What gets started, as a value: the program with its arguments and, if needed, a script that is appended as the
+    * last argument (path of a temporary file).
     */
   final case class Plan(program: List[String], script: Option[String])
 
-  /** Variablen, die das Startskript nur für `how` selbst setzt; der ausgeführte Befehl soll sie nicht erben. */
+  /** Variables the launcher sets only for `how` itself; the command that `how` runs must not inherit them. */
   val LauncherVariables: Set[String] = Set("MSYS_NO_PATHCONV", "HOW_BASH")
 
   private val Yes = Set("y", "yes", "j", "ja")
 
-  /** Nur ausdrückliche Zustimmung zählt; alles andere, auch eine leere Eingabe, ist nein. */
+  /** Only explicit consent counts; anything else, including empty input, means no. */
   def isYes(input: String): Boolean = Yes.contains(input.trim.toLowerCase)
 
-  /** Plant den Aufruf. Der Befehl wird nie als Argument übergeben, weil Java unter Windows Anführungszeichen in
-    * Argumenten nicht zuverlässig umsetzt: bash liest ihn aus einer Datei, PowerShell bekommt ihn Base64-kodiert. Nur
-    * für bash wird nach dem Programm gesucht.
+  /** Plans the call. The command is never passed as an argument, because Java does not reliably quote arguments on
+    * Windows: bash reads it from a file, PowerShell gets it Base64-encoded. Only bash is looked up as a program.
     */
   def plan(
       shell: Shell,
@@ -39,14 +38,14 @@ object Executor:
   private def powerShell(executable: String, command: String): Plan =
     Plan(List(executable, "-NoProfile", "-EncodedCommand", encodeForPowerShell(command)), None)
 
-  /** PowerShell erwartet für `-EncodedCommand` UTF-16LE in Base64. */
+  /** PowerShell expects UTF-16LE in Base64 for `-EncodedCommand`. */
   def encodeForPowerShell(command: String): String =
     Base64.getEncoder.encodeToString(command.getBytes(StandardCharsets.UTF_16LE))
 
-  /** Wählt die bash. Unter Windows findet `CreateProcess` in System32 den WSL-Starter `bash.exe` vor dem PATH; deshalb
-    * wird dort nie bloß „bash“ gestartet, sondern ein gefundener Pfad, in dieser Reihenfolge: die bash, die `how`
-    * gestartet hat (`HOW_BASH`, vom Startskript), die aus `SHELL` und die erste im PATH. WSL-Starter in System32,
-    * Sysnative und WindowsApps werden übergangen.
+  /** Chooses the bash. On Windows, `CreateProcess` finds the WSL launcher `bash.exe` in System32 before the PATH, so
+    * plain "bash" is never started there, only a path that was found, in this order: the bash that started `how`
+    * (`HOW_BASH`, set by the launcher), the one from `SHELL`, and the first one on the PATH. WSL launchers in System32,
+    * Sysnative and WindowsApps are skipped.
     */
   def chooseBash(env: Map[String, String], osName: String, exists: String => Boolean): Either[HowError, String] =
     if !Shell.isWindows(osName) then Right("bash")
@@ -64,10 +63,10 @@ object Executor:
     val lower = path.toLowerCase
     List("\\system32\\", "\\sysnative\\", "\\windowsapps\\").exists(lower.contains)
 
-  /** Prüft, ob eine Datei existiert; ein ungültiger Pfad heißt nein, nicht Exception. */
+  /** Checks whether a file exists; an invalid path means no, not an exception. */
   def fileExists(path: String): Boolean = Try(Files.isRegularFile(Path.of(path))).getOrElse(false)
 
-  /** Führt den Plan mit geerbter Ein- und Ausgabe aus und liefert den Exit-Code. */
+  /** Runs the plan with inherited input and output and returns the exit code. */
   def run(plan: Plan): Either[HowError, Int] =
     Try:
       plan.script match
@@ -84,6 +83,6 @@ object Executor:
     LauncherVariables.foreach(builder.environment().remove)
     builder.start().waitFor()
 
-  /** Löscht die Skriptdatei, auch wenn der Prozess nicht startet. */
+  /** Deletes the script file, even if the process does not start. */
   private final class Deleting(path: Path) extends AutoCloseable:
     def close(): Unit = Files.deleteIfExists(path): Unit
